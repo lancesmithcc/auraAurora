@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap');
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 20, 20, 40;
+  
+  /* Emotion colors */
+  --joy: #FFDD00; /* Brightened yellow */
+  --sadness: #0080FF; /* More saturated blue */
+  --anger: #FF2D00; /* Brightened red */
+  --fear: #9900FF; /* More vibrant purple */
+  --surprise: #00FFFF; /* Cyan */
+  --disgust: #00FF80; /* Bright green */
+  --contempt: #FF6600; /* Bright orange */
+  --neutral: #AAAAAA; /* Light gray */
+  
+  /* Font families */
+  --font-sans: 'Didact Gothic', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  color: #f3f4f6; /* text-gray-100 equivalent */
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
+  min-height: 100vh;
+  isolation: isolate; /* Create a stacking context at the root */
+  position: relative; /* Ensure stacking context works properly */
+  z-index: 0; /* Establish a baseline stacking context */
+  display: flex;
+  flex-direction: column;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+}
+
+/* Typography hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 500; /* font-medium equivalent */
+  letter-spacing: -0.025em; /* tracking-tight equivalent */
+  line-height: 1.2;
+}
+
+h1, h2 {
+  font-weight: 900; /* Extra bold for main headings */
+}
+
+h3, h4 {
+  font-weight: 700; /* Bold for secondary headings */
+}
+
+h5, h6 {
+  font-weight: 500; /* Medium for tertiary headings */
+}
+
+.font-light {
+  font-weight: 300;
+}
+
+.font-normal {
+  font-weight: 400;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-black {
+  font-weight: 900;
+}
+
+/* Modern button styles */
+.btn {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:focus {
+  outline: none;
+  --tw-ring-offset-width: 2px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-opacity: 0.5;
+  --tw-ring-color: rgba(59, 130, 246, var(--tw-ring-opacity));
+  --tw-ring-offset-shadow: 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+}
+
+.btn-primary {
+  background-color: #2563eb; /* bg-blue-600 */
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8; /* bg-blue-700 */
+}
+
+.btn-primary:focus {
+  --tw-ring-color: rgba(59, 130, 246, 0.5); /* ring-blue-500 */
+}
+
+.btn-success {
+  background-color: #16a34a; /* bg-green-600 */
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #15803d; /* bg-green-700 */
+}
+
+.btn-success:focus {
+  --tw-ring-color: rgba(34, 197, 94, 0.5); /* ring-green-500 */
+}
+
+.btn-warning {
+  background-color: #ca8a04; /* bg-yellow-600 */
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #a16207; /* bg-yellow-700 */
+}
+
+.btn-warning:focus {
+  --tw-ring-color: rgba(234, 179, 8, 0.5); /* ring-yellow-500 */
+}
+
+.btn-danger {
+  background-color: #dc2626; /* bg-red-600 */
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c; /* bg-red-700 */
+}
+
+.btn-danger:focus {
+  --tw-ring-color: rgba(239, 68, 68, 0.5); /* ring-red-500 */
+}
+
+/* Modern card styles */
+.card {
+  background-color: rgba(0, 0, 0, 0.4); /* bg-black/40 */
+  backdrop-filter: blur(4px); /* backdrop-blur-sm */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* border border-white/10 */
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-xl */
+}
+
+/* Animation for floating symbols */
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Custom animations */
+@keyframes pulse-slow {
+  0% {
+    opacity: 0.4;
+    box-shadow: 0 0 20px 2px rgba(124, 58, 237, 0.5);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 30px 4px rgba(124, 58, 237, 0.7);
+  }
+  100% {
+    opacity: 0.4;
+    box-shadow: 0 0 20px 2px rgba(124, 58, 237, 0.5);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Glow effect for buttons */
+.glow-on-hover {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.glow-on-hover:before {
+  content: '';
+  background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+  position: absolute;
+  top: -2px;
+  left:-2px;
+  background-size: 400%;
+  z-index: -1;
+  filter: blur(5px);
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  animation: glowing 20s linear infinite;
+  opacity: 0;
+  transition: opacity .3s ease-in-out;
+  border-radius: 9999px;
+}
+
+.glow-on-hover:hover:before {
+  opacity: 1;
+}
+
+.glow-on-hover:after {
+  z-index: -1;
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  left: 0;
+  top: 0;
+  border-radius: 9999px;
+}
+
+@keyframes glowing {
+  0% { background-position: 0 0; }
+  50% { background-position: 400% 0; }
+  100% { background-position: 0 0; }
+} 

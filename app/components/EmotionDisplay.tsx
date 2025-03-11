@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 // Define emotion mapping with labels for autism support
 export const emotionMap = {
@@ -24,6 +24,8 @@ const EmotionDisplay: React.FC<EmotionDisplayProps> = ({ emotions, overlay = fal
   const [dominantColor, setDominantColor] = useState<string>('#FFFFFF');
   const [emotionIntensity, setEmotionIntensity] = useState<number>(0);
   const [renderCount, setRenderCount] = useState<number>(0);
+  const [allEmojis, setAllEmojis] = useState<any[]>([]);
+  const animationTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Effect to handle emotions update and get dominant emotion
   useEffect(() => {
@@ -46,263 +48,413 @@ const EmotionDisplay: React.FC<EmotionDisplayProps> = ({ emotions, overlay = fal
           const { color } = emotionMap[emotion as keyof typeof emotionMap];
           setDominantColor(color);
         }
+        
+        // Generate new emojis based on emotions
+        generateEmojisOverTime(emotions);
       }
     }
+    
+    return () => {
+      if (animationTimerRef.current) {
+        clearInterval(animationTimerRef.current);
+      }
+    };
   }, [emotions]);
+  
+  // Generate emojis randomly over time based on emotions
+  const generateEmojisOverTime = (emotions: Record<string, number>) => {
+    if (animationTimerRef.current) {
+      clearInterval(animationTimerRef.current);
+    }
+    
+    // Start with initial batch
+    const initialEmojis = generateRandomEmojis(emotions, 20);
+    setAllEmojis(initialEmojis);
+    
+    // Add new emojis periodically and remove old ones
+    animationTimerRef.current = setInterval(() => {
+      setAllEmojis(prevEmojis => {
+        // Filter out emojis that have expired
+        const currentTime = Date.now();
+        const remainingEmojis = prevEmojis.filter(emoji => emoji.expiresAt > currentTime);
+        
+        // Add new emojis (1-3 at a time)
+        const newCount = Math.floor(Math.random() * 3) + 1;
+        const newEmojis = generateRandomEmojis(emotions, newCount);
+        
+        return [...remainingEmojis, ...newEmojis];
+      });
+    }, 1000); // Add new emojis every second
+  };
+  
+  // Generate a batch of random emojis based on emotion intensities
+  const generateRandomEmojis = (emotions: Record<string, number>, count: number) => {
+    const newEmojis = [];
+    
+    // Get total intensity to use for probability
+    const totalIntensity = Object.values(emotions).reduce((sum, intensity) => sum + intensity, 0);
+    
+    for (let i = 0; i < count; i++) {
+      // Select an emotion based on its relative intensity
+      let randomValue = Math.random() * totalIntensity;
+      let selectedEmotion = "";
+      let cumulativeIntensity = 0;
+      
+      // Weighted random selection based on intensity
+      for (const [emotion, intensity] of Object.entries(emotions)) {
+        cumulativeIntensity += intensity;
+        if (randomValue <= cumulativeIntensity) {
+          selectedEmotion = emotion;
+          break;
+        }
+      }
+      
+      // If no emotion was selected (shouldn't happen, but just in case)
+      if (!selectedEmotion && Object.keys(emotions).length > 0) {
+        selectedEmotion = Object.keys(emotions)[0];
+      }
+      
+      // Get emoji data
+      const emotionData = emotionMap[selectedEmotion as keyof typeof emotionMap];
+      if (!emotionData) continue;
+      
+      const { emoji, color } = emotionData;
+      const intensity = emotions[selectedEmotion] || 0.1;
+      
+      // Random position across the entire viewport (0-100%)
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      
+      // Size based on emotion intensity
+      const size = 24 + (intensity * 40);
+      
+      // Random duration for animations (5-10 seconds)
+      const duration = 5 + Math.random() * 5;
+      
+      // Random fade-in time (0.5-2 seconds)
+      const fadeInDuration = 0.5 + Math.random() * 1.5;
+      
+      // Random movement distance (5-15% of screen)
+      const moveDistance = 5 + Math.random() * 10;
+      
+      // Random direction (up, down, left, right with slight variations)
+      const direction = Math.floor(Math.random() * 8) * 45; // 0, 45, 90, 135, 180, 225, 270, 315 degrees
+      
+      // Random rotation (-10 to 10 degrees)
+      const rotation = -10 + Math.random() * 20;
+      
+      // Movement with direction
+      const deltaX = Math.cos(direction * Math.PI / 180) * moveDistance;
+      const deltaY = Math.sin(direction * Math.PI / 180) * moveDistance;
+      
+      // Expiration time (now + duration in ms)
+      const expiresAt = Date.now() + (duration * 1000);
+      
+      // Opacity varies with intensity (0.5-1.0)
+      const opacity = 0.5 + (intensity * 0.5);
+      
+      // Create emoji object
+      newEmojis.push({
+        id: `emoji-${Date.now()}-${i}-${selectedEmotion}`,
+        emoji,
+        color,
+        x,
+        y,
+        size,
+        duration,
+        fadeInDuration,
+        deltaX,
+        deltaY,
+        rotation,
+        expiresAt,
+        opacity,
+        intensity,
+        emotion: selectedEmotion
+      });
+    }
+    
+    return newEmojis;
+  };
 
-  // Generate circles for the aura
-  const generateAuraCircles = () => {
-    if (!dominantEmotion || Object.keys(emotions).length === 0) {
+  // Generate aurora blobs for each emotion
+  const generateAuroraBlobs = () => {
+    if (Object.keys(emotions).length === 0) {
       return [];
     }
 
-    type AuraCircle = {
+    type AuroraBlob = {
       id: string;
       x: string;
       y: string;
-      size: string;
+      width: string;
+      height: string;
+      rotation: number;
       color: string;
       opacity: number;
+      animationDuration: string;
       animationDelay: string;
+      scale: number;
+      borderRadius: string;
+      blur: string;
     };
 
-    const circles: AuraCircle[] = [];
-    const baseCount = 8; // Base number of circles
+    const blobs: AuroraBlob[] = [];
     
-    // Create circles for each emotion with intensity > 0.1
+    // Create large aurora blobs for each emotion with intensity > 0.05
     Object.entries(emotions)
-      .filter(([_, score]) => score > 0.1)
+      .filter(([_, score]) => score > 0.05)
       .forEach(([emotion, intensity], emotionIndex) => {
         if (!emotionMap[emotion as keyof typeof emotionMap]) return;
         
         const { color } = emotionMap[emotion as keyof typeof emotionMap];
-        const circleCount = Math.max(3, Math.round(intensity * 10)); // More circles for stronger emotions
+        // Larger blobs that cover more of the screen, adjusted by intensity
+        const blobCount = Math.max(2, Math.round(intensity * 5)); 
         
-        for (let i = 0; i < circleCount; i++) {
-          // Position circles in a spiral pattern
-          const angle = (i / circleCount) * Math.PI * 2 + (emotionIndex * Math.PI / 4);
-          const distance = 40 + (i * 15) + (intensity * 60);
+        for (let i = 0; i < blobCount; i++) {
+          // Position blobs more centered with some gentle randomness
+          const angle = (i / blobCount) * Math.PI * 2 + (emotionIndex * Math.PI / 5);
+          // Smaller distance to keep blobs more centered
+          const randomOffset = Math.random() * 20 - 10;
+          const distance = 25 + (i * 10) + (intensity * 20) + randomOffset;
           
           const x = 50 + Math.cos(angle) * distance;
           const y = 50 + Math.sin(angle) * distance;
           
-          // Size based on emotion intensity
-          const size = 20 + (intensity * 40) + (Math.random() * 20);
+          // Much larger sizes for more coverage
+          const baseSize = 100 + (intensity * 150) + (Math.random() * 60 - 30);
+          const width = baseSize * (0.8 + Math.random() * 0.5);
+          const height = baseSize * (0.8 + Math.random() * 0.5);
           
-          // Add a pulsing animation delay
-          const delay = i * 0.2 + emotionIndex * 0.5;
+          // Slower rotation for more subtle movement
+          const rotation = Math.random() * 360;
           
-          circles.push({
-            id: `${emotion}-${i}`,
+          // Slower animation speeds for more gentle movement
+          const animationDuration = 8 + Math.random() * 7 + 's';
+          const animationDelay = i * 0.8 + emotionIndex * 0.7 + Math.random() * 3 + 's';
+          
+          // Higher base opacity but still subtle
+          const opacity = 0.15 + (intensity * 0.25) + (Math.random() * 0.1);
+          
+          // Varied scale
+          const scale = 0.9 + Math.random() * 0.3;
+          
+          // Very soft edges for smooth transitions
+          const radius1 = 40 + Math.random() * 40;
+          const radius2 = 40 + Math.random() * 40;
+          const radius3 = 40 + Math.random() * 40;
+          const radius4 = 40 + Math.random() * 40;
+          const borderRadius = `${radius1}% ${radius2}% ${radius3}% ${radius4}%`;
+          
+          // Increased blur for softer edges
+          const blur = `${15 + Math.random() * 15}px`;
+          
+          blobs.push({
+            id: `aurora-${emotion}-${i}`,
             x: `${x}%`,
             y: `${y}%`,
-            size: `${size}px`,
+            width: `${width}px`,
+            height: `${height}px`,
+            rotation,
             color,
-            opacity: 0.2 + (intensity * 0.6),
-            animationDelay: `${delay}s`
+            opacity,
+            animationDuration,
+            animationDelay,
+            scale,
+            borderRadius,
+            blur
           });
         }
       });
     
-    return circles;
+    return blobs;
   };
   
-  // Generate rays emanating from center
-  const generateRays = () => {
-    if (!dominantEmotion || Object.keys(emotions).length === 0) {
-      return [];
+  // Generate base glow effect
+  const generateBaseGlow = () => {
+    if (Object.keys(emotions).length === 0) {
+      return null;
     }
     
-    type AuraRay = {
-      id: string;
-      startX: string;
-      startY: string;
-      endX: string;
-      endY: string;
-      angle: number;
-      color: string;
-      width: number;
-      opacity: number;
-      animationDelay: string;
+    // Find top emotions
+    const topEmotions = Object.entries(emotions)
+      .filter(([_, score]) => score > 0.1)
+      .sort(([_, a], [__, b]) => b - a)
+      .slice(0, 3);
+    
+    if (topEmotions.length === 0) return null;
+    
+    // Blend colors from top emotions
+    const gradientStops = topEmotions.map(([emotion, intensity], index) => {
+      const color = emotionMap[emotion as keyof typeof emotionMap]?.color || '#FFFFFF';
+      const position = index === 0 ? '0%' : `${index * 30 + 10}%`;
+      return `${color}${Math.round(intensity * 99).toString(16).padStart(2, '0')} ${position}`;
+    });
+    
+    // Add transparent stop at the end
+    gradientStops.push('transparent 80%');
+    
+    return {
+      background: `radial-gradient(circle at center, ${gradientStops.join(', ')})`,
+      animationDuration: '15s',
+      filter: 'blur(30px)',
+      opacity: 0.7
     };
-    
-    const rays: AuraRay[] = [];
-    const dominantIntensity = emotionIntensity || 0.5;
-    const rayCount = Math.max(8, Math.round(dominantIntensity * 24)); // More rays for stronger emotions
-    
-    for (let i = 0; i < rayCount; i++) {
-      const angle = (i / rayCount) * Math.PI * 2;
-      const length = 100 + (Math.random() * 50); // Length as percentage of container
-      
-      const startX = 50;
-      const startY = 50;
-      const endX = 50 + Math.cos(angle) * length;
-      const endY = 50 + Math.sin(angle) * length;
-      
-      // Get a semi-random color from the detected emotions
-      const emotionsArray = Object.entries(emotions).filter(([_, score]) => score > 0.1);
-      const randomEmotionIndex = Math.floor(Math.random() * emotionsArray.length);
-      const [randomEmotion] = emotionsArray[randomEmotionIndex] || [dominantEmotion];
-      
-      const rayColor = emotionMap[randomEmotion as keyof typeof emotionMap]?.color || dominantColor;
-      
-      rays.push({
-        id: `ray-${i}`,
-        startX: `${startX}%`,
-        startY: `${startY}%`,
-        endX: `${endX}%`,
-        endY: `${endY}%`,
-        angle: Math.atan2(endY - startY, endX - startX),
-        color: rayColor,
-        width: 5 + (dominantIntensity * 15),
-        opacity: 0.3 + (Math.random() * 0.4),
-        animationDelay: `${i * 0.1}s`
-      });
-    }
-    
-    return rays;
   };
 
-  // Create emoji elements for each detected emotion
-  const renderEmojis = () => {
-    return Object.entries(emotions)
-      .filter(([_, score]) => score > 0.1)
-      .map(([emotion, intensity]) => {
-        if (!emotionMap[emotion as keyof typeof emotionMap]) return null;
-        
-        const { emoji, color, label } = emotionMap[emotion as keyof typeof emotionMap];
-        const count = Math.min(8, Math.max(1, Math.round(intensity * 12))); // More emojis for stronger emotions
-        
-        // Create multiple instances of the same emoji
-        return Array.from({ length: count }).map((_, i) => {
-          // Random position, with stronger emotions more centered
-          const angle = (i / count) * Math.PI * 2;
-          const distance = 30 + (1 - intensity) * 25 + (Math.random() * 15);
+  const auroraBlobs = generateAuroraBlobs();
+  const baseGlow = generateBaseGlow();
+  
+  return (
+    <>
+      {/* Fixed overlay that covers the whole screen - emojis container */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-[999]">
+        {/* CSS for animations */}
+        <style jsx>{`
+          @keyframes fadeInOut {
+            0% { opacity: 0; }
+            15% { opacity: var(--max-opacity, 1); }
+            85% { opacity: var(--max-opacity, 1); }
+            100% { opacity: 0; }
+          }
           
-          const x = 50 + Math.cos(angle) * distance;
-          const y = 50 + Math.sin(angle) * distance;
+          @keyframes floatMove {
+            0% { 
+              transform: translate(0, 0) rotate(0deg); 
+            }
+            100% { 
+              transform: translate(var(--move-x, 0), var(--move-y, 0)) rotate(var(--rotation, 0deg)); 
+            }
+          }
+        `}</style>
+        
+        {/* Floating emojis throughout the viewport */}
+        {allEmojis.map(emoji => (
+          <div
+            key={emoji.id}
+            className="absolute"
+            style={{
+              left: `${emoji.x}%`,
+              top: `${emoji.y}%`,
+              fontSize: `${emoji.size}px`,
+              color: 'white',
+              filter: `drop-shadow(0 0 10px ${emoji.color})`,
+              opacity: 0,
+              animation: `fadeInOut ${emoji.duration}s ease-in-out, floatMove ${emoji.duration}s ease-in-out`,
+              animationFillMode: 'forwards',
+              '--max-opacity': emoji.opacity,
+              '--move-x': `${emoji.deltaX}vw`,
+              '--move-y': `${emoji.deltaY}vh`,
+              '--rotation': `${emoji.rotation}deg`,
+              zIndex: Math.round(emoji.intensity * 100) + 1000
+            } as React.CSSProperties}
+          >
+            {emoji.emoji}
+          </div>
+        ))}
+      </div>
+      
+      {/* Contained aurora effect over video */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1000 }}>
+        {/* CSS for Aurora-style animations */}
+        <style jsx>{`
+          @keyframes pulse {
+            0%, 100% { transform: scale(var(--scale, 1)); opacity: var(--base-opacity, 0.5); }
+            50% { transform: scale(calc(var(--scale, 1) * 1.05)); opacity: calc(var(--base-opacity, 0.5) * 1.2); }
+          }
           
-          // Size based on emotion intensity
-          const size = 20 + (intensity * 30);
+          @keyframes floatEmoji {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-50%, calc(-50% - var(--float-y, 10px))) rotate(var(--float-rotation, 0deg)); }
+          }
+          
+          @keyframes morph {
+            0%, 100% { border-radius: var(--border-radius-start, 40% 60% 60% 40%); }
+            33% { border-radius: var(--border-radius-mid1, 60% 40% 30% 70%); }
+            66% { border-radius: var(--border-radius-mid2, 30% 60% 70% 40%); }
+          }
+          
+          @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg) scale(var(--scale, 1)); }
+            to { transform: translate(-50%, -50%) rotate(360deg) scale(var(--scale, 1)); }
+          }
+          
+          @keyframes glow {
+            0%, 100% { opacity: var(--base-opacity, 0.5); filter: hue-rotate(0deg); }
+            33% { opacity: calc(var(--base-opacity, 0.5) * 1.3); filter: hue-rotate(10deg); }
+            66% { opacity: calc(var(--base-opacity, 0.5) * 1.1); filter: hue-rotate(-10deg); }
+          }
+        `}</style>
+        
+        {/* Background blur/glow effect */}
+        {baseGlow && (
+          <div 
+            className="absolute inset-0 rounded-full"
+            style={{ 
+              background: baseGlow.background,
+              opacity: 0.7,
+              mixBlendMode: 'screen',
+              zIndex: 1001,
+              filter: baseGlow.filter,
+              animation: 'glow 15s infinite ease-in-out alternate',
+              '--base-opacity': '0.7'
+            } as React.CSSProperties}
+          />
+        )}
+        
+        {/* Aurora blobs - now larger, softer and more amorphous */}
+        {auroraBlobs.map(blob => {
+          // Create unique border-radius values for morphing animation
+          const radius1Start = 40 + Math.random() * 40;
+          const radius2Start = 40 + Math.random() * 40;
+          const radius3Start = 40 + Math.random() * 40;
+          const radius4Start = 40 + Math.random() * 40;
+          
+          const radius1Mid1 = 40 + Math.random() * 40;
+          const radius2Mid1 = 40 + Math.random() * 40;
+          const radius3Mid1 = 40 + Math.random() * 40;
+          const radius4Mid1 = 40 + Math.random() * 40;
+          
+          const radius1Mid2 = 40 + Math.random() * 40;
+          const radius2Mid2 = 40 + Math.random() * 40;
+          const radius3Mid2 = 40 + Math.random() * 40;
+          const radius4Mid2 = 40 + Math.random() * 40;
+          
+          const borderRadiusStart = `${radius1Start}% ${radius2Start}% ${radius3Start}% ${radius4Start}%`;
+          const borderRadiusMid1 = `${radius1Mid1}% ${radius2Mid1}% ${radius3Mid1}% ${radius4Mid1}%`;
+          const borderRadiusMid2 = `${radius1Mid2}% ${radius2Mid2}% ${radius3Mid2}% ${radius4Mid2}%`;
           
           return (
             <div
-              key={`emoji-${emotion}-${i}`}
-              className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center animate-pulse"
+              key={blob.id}
+              className="absolute"
               style={{
-                left: `${x}%`,
-                top: `${y}%`,
-                zIndex: 9500,
-                animationDuration: `${1.5 + Math.random()}s`,
-                animationDelay: `${i * 0.2}s`,
-                filter: `drop-shadow(0 0 10px ${color})`
-              }}
-            >
-              <div 
-                className="text-4xl"
-                style={{ fontSize: `${size}px` }}
-              >
-                {emoji}
-              </div>
-              <div 
-                className="mt-1 text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ 
-                  backgroundColor: color,
-                  color: '#000',
-                  opacity: 0.9
-                }}
-              >
-                {label}
-              </div>
-            </div>
+                left: blob.x,
+                top: blob.y,
+                width: blob.width,
+                height: blob.height,
+                background: `radial-gradient(circle, ${blob.color}90 20%, ${blob.color}50 60%, transparent 100%)`,
+                opacity: blob.opacity,
+                mixBlendMode: 'screen',
+                position: 'absolute',
+                transform: `translate(-50%, -50%) rotate(${blob.rotation}deg) scale(${blob.scale})`,
+                animation: 'morph 15s infinite ease-in-out alternate, pulse 8s infinite ease-in-out alternate',
+                animationDuration: blob.animationDuration,
+                animationDelay: blob.animationDelay,
+                zIndex: 1005,
+                borderRadius: blob.borderRadius,
+                filter: `blur(${blob.blur})`,
+                boxShadow: `0 0 30px 10px ${blob.color}30`,
+                '--border-radius-start': borderRadiusStart,
+                '--border-radius-mid1': borderRadiusMid1,
+                '--border-radius-mid2': borderRadiusMid2,
+                '--base-opacity': String(blob.opacity),
+                '--scale': String(blob.scale)
+              } as React.CSSProperties}
+            />
           );
-        });
-      }).flat().filter(Boolean);
-  };
-
-  const auraCircles = generateAuraCircles();
-  const rays = generateRays();
-  
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 1000 }}>
-      {/* Base glow effect */}
-      <div 
-        className="absolute inset-0 rounded-full"
-        style={{ 
-          background: dominantEmotion 
-            ? `radial-gradient(circle, ${dominantColor}80 0%, ${dominantColor}40 30%, ${dominantColor}20 60%, transparent 80%)`
-            : 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)',
-          opacity: emotions && Object.keys(emotions).length > 0 ? 0.9 : 0.3,
-          mixBlendMode: 'screen',
-          zIndex: 1010,
-        }}
-      />
-      
-      {/* Aura circles */}
-      {auraCircles.map(circle => (
-        <div
-          key={circle.id}
-          className="absolute rounded-full animate-pulse"
-          style={{
-            left: circle.x,
-            top: circle.y,
-            width: circle.size,
-            height: circle.size,
-            background: `radial-gradient(circle, ${circle.color}cc 0%, ${circle.color}66 60%, transparent 100%)`,
-            opacity: circle.opacity,
-            transform: 'translate(-50%, -50%)',
-            animation: 'pulse 2s infinite',
-            animationDelay: circle.animationDelay,
-            zIndex: 1020,
-            boxShadow: `0 0 20px 5px ${circle.color}80`,
-            mixBlendMode: 'screen',
-          }}
-        />
-      ))}
-      
-      {/* Aura rays */}
-      {rays.map(ray => {
-        const length = Math.hypot(
-          parseFloat(ray.endX) - parseFloat(ray.startX), 
-          parseFloat(ray.endY) - parseFloat(ray.startY)
-        );
-        
-        return (
-          <div
-            key={ray.id}
-            className="absolute"
-            style={{
-              left: ray.startX,
-              top: ray.startY,
-              width: `${length}%`,
-              height: `${ray.width}px`,
-              background: `linear-gradient(90deg, transparent 0%, ${ray.color}cc 50%, transparent 100%)`,
-              opacity: ray.opacity,
-              transform: `rotate(${ray.angle}rad) translateX(0)`,
-              transformOrigin: 'left center',
-              zIndex: 1015,
-              mixBlendMode: 'screen',
-              animationDelay: ray.animationDelay,
-              animation: 'pulse 3s infinite',
-            }}
-          />
-        );
-      })}
-      
-      {/* Emotion emojis */}
-      {renderEmojis()}
-      
-      {/* Debug indicator - appears clearly on all backgrounds */}
-      <div 
-        className="absolute bottom-4 right-4 bg-black/80 text-white text-xs py-1 px-2 rounded"
-        style={{ zIndex: 9999 }}
-      >
-        Render #{renderCount} | Emotions: {Object.keys(emotions).length}
-        {dominantEmotion && (
-          <span> | Main: {dominantEmotion} ({Math.round(emotionIntensity * 100)}%)</span>
-        )}
+        })}
       </div>
-    </div>
+    </>
   );
 };
 

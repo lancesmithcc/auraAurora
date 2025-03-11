@@ -352,22 +352,26 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto">
-      <div className="flex flex-col items-center">
-        {/* Video container with clear explanation for autism support */}
-        <div className="mb-4 text-center">
-          <p className="text-lg font-bold text-white inline-block px-4 py-1 rounded-full bg-gradient-to-r from-purple-600 to-blue-600">
-            Emotional Aura Visualizer 
-            <span className="ml-2 text-sm bg-black/30 px-2 py-1 rounded-full">Helping interpret emotions</span>
-          </p>
-        </div>
-        
-        {/* COMPLETELY REDESIGNED VIDEO CONTAINER */}
-        <div className="relative mb-8" style={{ width: '400px', height: '400px' }}>
-          {/* Main container with fixed dimensions */}
+    <div className="w-full max-w-xl mx-auto">
+      <div className="flex flex-col">
+        {/* Ultra minimalist video container - NO BORDERS */}
+        <div 
+          className="relative mb-6" 
+          style={{ 
+            width: '100%',
+            aspectRatio: '1/1',
+            maxWidth: '400px',
+            margin: '0 auto'
+          }}
+        >
+          {/* Main container with fluid dimensions */}
           <div 
-            className="relative w-full h-full rounded-full overflow-hidden border-8 border-indigo-600/70 bg-black/20"
-            style={{ position: 'relative' }}
+            ref={containerRef}
+            className="relative w-full h-full rounded-full overflow-hidden"
+            style={{
+              background: 'radial-gradient(circle, rgba(5,5,20,0.7) 0%, rgba(0,0,0,0.9) 100%)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            }}
           >
             {/* Video element */}
             <video 
@@ -388,7 +392,7 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
                 style={{ 
                   zIndex: 100, 
                   pointerEvents: 'none',
-                  position: 'absolute', // Force absolute positioning
+                  position: 'absolute',
                   left: 0,
                   top: 0,
                   width: '100%',
@@ -398,124 +402,16 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
                 <EmotionDisplay emotions={localEmotions} overlay={true} />
               </div>
             )}
-            
-            {/* Direct emotion visualization - leave in place as backup */}
-            {videoLoaded && Object.keys(localEmotions).length > 0 && (
-              <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
-                {/* Debug overlay - guaranteed to be visible */}
-                <div 
-                  className="absolute inset-0 rounded-full"
-                  style={{ 
-                    background: 'radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(0,0,0,0.3) 100%)',
-                    mixBlendMode: 'overlay',
-                    zIndex: 100,
-                  }}
-                />
-
-                {/* Direct emotion indicators */}
-                {Object.entries(localEmotions)
-                  .filter(([_, score]) => score > 0.1)
-                  .map(([emotion, intensity], index) => {
-                    if (!emotionMap[emotion as keyof typeof emotionMap]) return null;
-                    
-                    const { emoji, color, label } = emotionMap[emotion as keyof typeof emotionMap];
-                    const angle = (index / Object.keys(localEmotions).length) * Math.PI * 2;
-                    const distance = 150 * intensity + 50;
-                    
-                    const x = 200 + Math.cos(angle) * distance;
-                    const y = 200 + Math.sin(angle) * distance;
-                    
-                    return (
-                      <div 
-                        key={emotion} 
-                        className="absolute flex flex-col items-center justify-center"
-                        style={{
-                          left: `${x}px`,
-                          top: `${y}px`,
-                          transform: 'translate(-50%, -50%)',
-                          zIndex: 500,
-                          textShadow: `0 0 10px ${color}`,
-                          transition: 'all 0.5s ease-in-out',
-                        }}
-                      >
-                        <div 
-                          className="text-4xl"
-                          style={{ 
-                            fontSize: `${30 + intensity * 30}px`,
-                            filter: `drop-shadow(0 0 10px ${color})`,
-                            zIndex: 500,
-                          }}
-                        >
-                          {emoji}
-                        </div>
-                        <div 
-                          className="text-xs font-bold px-2 py-1 rounded-full text-center mt-1"
-                          style={{ 
-                            backgroundColor: color,
-                            color: '#000',
-                            zIndex: 500,
-                          }}
-                        >
-                          {label} {Math.round(intensity * 100)}%
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
-            
-            {/* Enhanced debug overlay - place AFTER the aura for clearer debugging */}
-            <div className="absolute inset-0" style={{ pointerEvents: 'none' }}>
-              {DEBUG_OVERLAY && (
-                <>
-                  {/* Cross hairs to verify overlay position */}
-                  <div 
-                    className="absolute"
-                    style={{ 
-                      left: '0',
-                      top: '50%',
-                      width: '100%',
-                      height: '2px',
-                      backgroundColor: 'red',
-                      zIndex: 9999,
-                      opacity: 0.5,
-                    }}
-                  />
-                  <div 
-                    className="absolute"
-                    style={{ 
-                      left: '50%',
-                      top: '0',
-                      width: '2px',
-                      height: '100%',
-                      backgroundColor: 'red',
-                      zIndex: 9999,
-                      opacity: 0.5,
-                    }}
-                  />
-                  
-                  {/* Debug text */}
-                  <div 
-                    className="absolute bottom-4 left-4 bg-black/70 text-white text-xs p-2 rounded"
-                    style={{ zIndex: 9999 }}
-                  >
-                    Debug: {videoLoaded ? 'Video Ready' : 'Video Loading'}<br/>
-                    Emotions: {Object.keys(localEmotions).length}<br/>
-                    Size: {videoSize.width}x{videoSize.height}
-                  </div>
-                </>
-              )}
-            </div>
           </div>
           
-          {/* Status indicator with explicit label */}
+          {/* Minimalist status indicator */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40">
-            <span className={`inline-block px-4 py-1 rounded-full text-sm font-bold backdrop-blur-md ${
-              videoLoaded ? 'bg-green-500/80 text-white' : 
-              cameraActive ? 'bg-yellow-500/80 text-white' : 
-              'bg-gray-500/80 text-white'
+            <span className={`text-sm font-medium px-4 py-1.5 rounded-full backdrop-blur-xl ${
+              videoLoaded ? 'bg-emerald-500/30 text-emerald-50' : 
+              cameraActive ? 'bg-amber-500/30 text-amber-50' : 
+              'bg-slate-500/30 text-slate-50'
             }`}>
-              {videoLoaded ? '✓ Camera Active' : cameraActive ? '⟳ Loading Camera...' : '▶ Click Start Camera'}
+              {videoLoaded ? '● Live' : cameraActive ? '● Loading...' : 'Start Camera'}
             </span>
           </div>
           
@@ -523,42 +419,42 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
           <canvas ref={canvasRef} className="hidden" width={videoSize.width || 640} height={videoSize.height || 480} />
         </div>
         
-        {/* Camera Controls - large and prominent with clear labels */}
+        {/* Sleek, modern camera controls */}
         <div className="flex gap-4 justify-center mb-6">
           {!cameraActive ? (
             <button
               onClick={handleStartCamera}
-              className="btn btn-primary text-xl font-bold px-8 py-3 flex items-center"
+              className="btn btn-primary text-base flex items-center"
               aria-label="Start camera"
               tabIndex={0}
             >
-              <span className="mr-2">▶</span> Start Camera
+              <span className="mr-2">●</span> Start Camera
             </button>
           ) : (
             <>
               <button
                 onClick={handleStopCamera}
-                className="btn btn-danger text-lg font-bold px-6 py-3 flex items-center"
+                className="btn btn-danger text-base flex items-center"
                 aria-label="Stop camera"
                 tabIndex={0}
               >
-                <span className="mr-2">■</span> Stop Camera
+                <span className="mr-2">■</span> Stop
               </button>
               
               {!isRecording ? (
                 <button
                   onClick={handleStartRecording}
-                  className="btn btn-success text-xl font-bold px-8 py-3 flex items-center"
+                  className="btn btn-success text-base flex items-center"
                   aria-label="Start analysis"
                   tabIndex={0}
                   disabled={!videoLoaded}
                 >
-                  <span className="mr-2">⚡</span> Start Analysis
+                  <span className="mr-2">⚡</span> Analyze
                 </button>
               ) : (
                 <button
                   onClick={handleStopRecording}
-                  className="btn btn-warning text-lg font-bold px-6 py-3 flex items-center"
+                  className="btn btn-warning text-base flex items-center"
                   aria-label="Stop analysis"
                   tabIndex={0}
                 >
@@ -569,109 +465,69 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
           )}
         </div>
         
-        {/* Autism-friendly explanation of emotions being displayed */}
-        <div className="w-full max-w-lg mx-auto mb-6 bg-black/30 p-4 rounded-xl text-center">
-          <p className="text-white/90 text-sm mb-2">
-            <strong>This tool visualizes emotions as colorful patterns around your face.</strong>
-          </p>
-          <p className="text-white/80 text-xs">
-            Different emotions appear as different colors. The bigger and brighter the pattern, the stronger the emotion.
-            Emojis with labels help identify specific emotions.
-          </p>
-        </div>
-        
-        {/* Emotion analysis with clear labeling for autism support */}
+        {/* Emotion analysis displayed as a grid of emotion cards */}
         {Object.keys(localEmotions).length > 0 && (
-          <div className="w-full max-w-2xl">
-            <div className="card p-6">
-              <h2 className="text-2xl font-bold mb-4 text-white">
-                Detected Emotions <span className="ml-2 text-sm bg-black/30 px-2 py-1 rounded-full">What you're expressing</span>
-              </h2>
-              
-              {/* Grid layout for emotion bars */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(localEmotions)
-                  .filter(([_, score]) => score > 0)
-                  .sort(([_, scoreA], [__, scoreB]) => scoreB - scoreA)
-                  .map(([emotion, score]) => {
-                    // Get color for this emotion
-                    const emotionColor = 
-                      emotion === 'joy' ? '#FFDD00' :
-                      emotion === 'sadness' ? '#0080FF' :
-                      emotion === 'anger' ? '#FF2D00' :
-                      emotion === 'fear' ? '#9900FF' :
-                      emotion === 'surprise' ? '#00FFFF' :
-                      emotion === 'disgust' ? '#00FF80' :
-                      emotion === 'contempt' ? '#FF6600' :
-                      '#AAAAAA';
-                    
-                    const emotionLabel = 
-                      emotion === 'joy' ? 'Joy/Happiness' :
-                      emotion === 'sadness' ? 'Sadness' :
-                      emotion === 'anger' ? 'Anger' :
-                      emotion === 'fear' ? 'Fear/Anxiety' :
-                      emotion === 'surprise' ? 'Surprise' :
-                      emotion === 'disgust' ? 'Disgust' :
-                      emotion === 'contempt' ? 'Contempt' :
-                      'Neutral';
-                    
-                    return (
-                      <div key={emotion} className="bg-black/40 p-4 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl" aria-hidden="true">
-                            {emotion === 'joy' ? '😊' :
-                            emotion === 'sadness' ? '😢' :
-                            emotion === 'anger' ? '😠' :
-                            emotion === 'fear' ? '😨' :
-                            emotion === 'surprise' ? '😲' :
-                            emotion === 'disgust' ? '🤢' :
-                            emotion === 'contempt' ? '😏' :
-                            '😐'}
-                          </span>
-                          <div className="flex-grow">
-                            <div className="flex justify-between">
-                              <span className="text-sm font-medium capitalize">{emotionLabel}</span>
-                              <span className="text-sm font-bold">{formatPercentage(score)}</span>
-                            </div>
-                            <div className="mt-2 h-5 w-full bg-black/40 rounded-full overflow-hidden">
-                              <div 
-                                className="h-full rounded-full transition-all duration-500"
-                                style={{ 
-                                  width: `${Math.max(5, Math.round(score * 100))}%`,
-                                  backgroundColor: emotionColor 
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-              
-              {/* Autism-friendly explanation of the dominant emotion */}
+          <div className="w-full card p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {Object.entries(localEmotions)
+                .filter(([_, score]) => score > 0.05)
                 .sort(([_, scoreA], [__, scoreB]) => scoreB - scoreA)
-                .slice(0, 1)
                 .map(([emotion, score]) => {
-                  const dominantEmotionName = 
-                    emotion === 'joy' ? 'joy or happiness' :
-                    emotion === 'sadness' ? 'sadness' :
-                    emotion === 'anger' ? 'anger' :
-                    emotion === 'fear' ? 'fear or anxiety' :
-                    emotion === 'surprise' ? 'surprise' :
-                    emotion === 'disgust' ? 'disgust' :
-                    emotion === 'contempt' ? 'contempt' :
-                    'neutral';
+                  // Get color for this emotion
+                  const emotionColor = 
+                    emotion === 'joy' ? '#FFDD00' :
+                    emotion === 'sadness' ? '#0080FF' :
+                    emotion === 'anger' ? '#FF2D00' :
+                    emotion === 'fear' ? '#9900FF' :
+                    emotion === 'surprise' ? '#00FFFF' :
+                    emotion === 'disgust' ? '#00FF80' :
+                    emotion === 'contempt' ? '#FF6600' :
+                    '#AAAAAA';
+                  
+                  const emotionLabel = 
+                    emotion === 'joy' ? 'Joy' :
+                    emotion === 'sadness' ? 'Sadness' :
+                    emotion === 'anger' ? 'Anger' :
+                    emotion === 'fear' ? 'Fear' :
+                    emotion === 'surprise' ? 'Surprise' :
+                    emotion === 'disgust' ? 'Disgust' :
+                    emotion === 'contempt' ? 'Contempt' :
+                    'Neutral';
                   
                   return (
-                    <div key={emotion} className="mt-4 p-4 bg-indigo-600/30 border border-indigo-500/40 rounded-xl">
-                      <p className="text-white font-bold">
-                        Your main emotion is <span className="uppercase">{dominantEmotionName}</span> ({formatPercentage(score)})
-                      </p>
-                      <p className="text-white/80 text-sm mt-1">
-                        This is shown in the aura as the most prominent color and pattern.
-                      </p>
+                    <div 
+                      key={emotion} 
+                      className="glass p-3 flex flex-col items-center justify-center text-center"
+                      style={{
+                        boxShadow: `0 0 15px 2px ${emotionColor}20`
+                      }}
+                    >
+                      <span className="text-2xl mb-1" aria-hidden="true">
+                        {emotion === 'joy' ? '😊' :
+                        emotion === 'sadness' ? '😢' :
+                        emotion === 'anger' ? '😠' :
+                        emotion === 'fear' ? '😨' :
+                        emotion === 'surprise' ? '😲' :
+                        emotion === 'disgust' ? '🤢' :
+                        emotion === 'contempt' ? '😏' :
+                        '😐'}
+                      </span>
+                      <span className="text-xs font-medium" style={{ color: emotionColor }}>
+                        {emotionLabel}
+                      </span>
+                      <div className="w-full mt-2 progress-bar">
+                        <div 
+                          className="progress-fill"
+                          style={{ 
+                            width: `${Math.max(5, Math.round(score * 100))}%`,
+                            backgroundColor: emotionColor,
+                            boxShadow: `0 0 8px ${emotionColor}`
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs mt-1 opacity-70">
+                        {formatPercentage(score)}
+                      </span>
                     </div>
                   );
                 })}
@@ -679,16 +535,11 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
           </div>
         )}
         
-        {/* Error message with clear explanation */}
+        {/* Clean error message */}
         {error && (
-          <div className="mt-4 p-4 bg-red-500/30 border-2 border-red-500 text-white rounded-xl max-w-2xl">
-            <div className="flex items-start space-x-3">
-              <div className="text-xl">⚠️</div>
-              <div>
-                <p className="font-bold">Problem:</p>
-                <p>{error}</p>
-              </div>
-            </div>
+          <div className="mt-4 p-4 glass text-white text-center">
+            <span className="text-xl">⚠️</span>
+            <p className="text-sm mt-2 text-red-300">{error}</p>
           </div>
         )}
       </div>

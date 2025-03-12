@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { analyzeEmotions } from '../lib/humeApi'
-import EmotionDisplay, { emotionMap } from './EmotionDisplay'
 
 // Debug constants
 const DEBUG_OVERLAY = true; // Set to true to enable mock emotions for overlay testing
@@ -316,14 +315,14 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
         
         // Use mock emotions when blob creation fails
         const mockEmotions = {
-          joy: 0.3,
-          sadness: 0.2,
-          anger: 0.15,
-          fear: 0.05,
-          surprise: 0.1,
-          disgust: 0.1,
-          contempt: 0.05,
-          neutral: 0.05
+          joy: 0,
+          sadness: 0,
+          anger: 0,
+          fear: 0,
+          surprise: 0,
+          disgust: 0,
+          contempt: 0,
+          neutral: 0
         };
         
         setEmotions(mockEmotions);
@@ -353,24 +352,26 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
 
   return (
     <div className="w-full max-w-xl mx-auto">
-      <div className="flex flex-col">
-        {/* Ultra minimalist video container - NO BORDERS */}
+      <div className="flex flex-col md:flex-row md:items-start md:gap-6">
+        {/* Ultra minimalist video container */}
         <div 
-          className="relative mb-6" 
+          className="relative mb-6 md:mb-0 mx-auto" 
           style={{ 
             width: '100%',
             aspectRatio: '1/1',
-            maxWidth: '400px',
+            maxWidth: '1000px',
             margin: '0 auto'
           }}
         >
           {/* Main container with fluid dimensions */}
           <div 
             ref={containerRef}
-            className="relative w-full h-full rounded-full overflow-hidden"
+            className="relative w-full h-full rounded-full overflow-hidden mx-auto"
             style={{
               background: 'radial-gradient(circle, rgba(5,5,20,0.7) 0%, rgba(0,0,0,0.9) 100%)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              boxShadow: '0 25px 50px -12px rgba(0, 255, 255, 0.5)',
+              border: '11px solid rgba(255, 255, 255, 0.7)', // Added 11px border
+              minWidth: '420px'
             }}
           >
             {/* Video element */}
@@ -387,32 +388,8 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
             
             {/* Primary Emotion Display Component - Main overlay */}
             {videoLoaded && (
-              <div 
-                className="absolute inset-0 rounded-full overflow-hidden"
-                style={{ 
-                  zIndex: 100, 
-                  pointerEvents: 'none',
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  width: '100%',
-                  height: '100%'
-                }}
-              >
-                <EmotionDisplay emotions={localEmotions} overlay={true} />
-              </div>
+              <></>
             )}
-          </div>
-          
-          {/* Minimalist status indicator */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-40">
-            <span className={`text-sm font-medium px-4 py-1.5 rounded-full backdrop-blur-xl ${
-              videoLoaded ? 'bg-emerald-500/30 text-emerald-50' : 
-              cameraActive ? 'bg-amber-500/30 text-amber-50' : 
-              'bg-slate-500/30 text-slate-50'
-            }`}>
-              {videoLoaded ? '● Live' : cameraActive ? '● Loading...' : 'Start Camera'}
-            </span>
           </div>
           
           {/* Hidden canvas for capturing frames */}
@@ -420,124 +397,68 @@ const CameraComponent = ({ setEmotions }: CameraComponentProps) => {
         </div>
         
         {/* Sleek, modern camera controls */}
-        <div className="flex gap-4 justify-center mb-6">
-          {!cameraActive ? (
-            <button
-              onClick={handleStartCamera}
-              className="btn btn-primary text-base flex items-center"
-              aria-label="Start camera"
-              tabIndex={0}
-            >
-              <span className="mr-2">●</span> Start Camera
-            </button>
-          ) : (
-            <>
+        <div className="flex flex-col gap-4 items-center w-full mx-auto">
+          <div className="flex gap-4 justify-center mb-2 w-full">
+            {!cameraActive ? (
               <button
-                onClick={handleStopCamera}
-                className="btn btn-danger text-base flex items-center"
-                aria-label="Stop camera"
+                onClick={handleStartCamera}
+                className="btn btn-primary text-base flex items-center"
+                aria-label="Start camera"
                 tabIndex={0}
               >
-                <span className="mr-2">■</span> Stop
+                <span className="mr-2">●</span> Initialize
               </button>
-              
-              {!isRecording ? (
+            ) : (
+              <>
                 <button
-                  onClick={handleStartRecording}
-                  className="btn btn-success text-base flex items-center"
-                  aria-label="Start analysis"
-                  tabIndex={0}
-                  disabled={!videoLoaded}
-                >
-                  <span className="mr-2">⚡</span> Analyze
-                </button>
-              ) : (
-                <button
-                  onClick={handleStopRecording}
-                  className="btn btn-warning text-base flex items-center"
-                  aria-label="Stop analysis"
+                  onClick={handleStopCamera}
+                  className="btn btn-danger text-base flex items-center"
+                  aria-label="Stop camera"
                   tabIndex={0}
                 >
-                  <span className="mr-2">✖</span> Stop Analysis
+                  <span className="mr-4">💀</span> Hard Reset
                 </button>
-              )}
-            </>
+                
+                {!isRecording ? (
+                  <button
+                    onClick={handleStartRecording}
+                    className="btn btn-success text-base flex items-center"
+                    aria-label="Start analysis"
+                    tabIndex={0}
+                    disabled={!videoLoaded}
+                  >
+                    <span className="mr-2">⚡</span> Activate AuraAurora
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleStopRecording}
+                    className="btn btn-warning text-base flex items-center"
+                    aria-label="Stop analysis"
+                    tabIndex={0}
+                  >
+                    <span className="mr-2"></span>■ Deactivate
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+          
+          {/* Moved status indicator below the buttons */}
+          {cameraActive && (
+            <div className="mt-2 mb-4">
+              <span className={`text-sm font-medium px-4 py-1.5 rounded-full backdrop-blur-xl ${
+                videoLoaded ? 'bg-emerald-500/30 text-emerald-50' : 
+                'bg-amber-500/30 text-amber-50'
+              }`}>
+                {videoLoaded ? '✨' : '🌀'}
+              </span>
+            </div>
           )}
         </div>
         
-        {/* Emotion analysis displayed as a grid of emotion cards */}
-        {Object.keys(localEmotions).length > 0 && (
-          <div className="w-full card p-5">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(localEmotions)
-                .filter(([_, score]) => score > 0.05)
-                .sort(([_, scoreA], [__, scoreB]) => scoreB - scoreA)
-                .map(([emotion, score]) => {
-                  // Get color for this emotion
-                  const emotionColor = 
-                    emotion === 'joy' ? '#FFDD00' :
-                    emotion === 'sadness' ? '#0080FF' :
-                    emotion === 'anger' ? '#FF2D00' :
-                    emotion === 'fear' ? '#9900FF' :
-                    emotion === 'surprise' ? '#00FFFF' :
-                    emotion === 'disgust' ? '#00FF80' :
-                    emotion === 'contempt' ? '#FF6600' :
-                    '#AAAAAA';
-                  
-                  const emotionLabel = 
-                    emotion === 'joy' ? 'Joy' :
-                    emotion === 'sadness' ? 'Sadness' :
-                    emotion === 'anger' ? 'Anger' :
-                    emotion === 'fear' ? 'Fear' :
-                    emotion === 'surprise' ? 'Surprise' :
-                    emotion === 'disgust' ? 'Disgust' :
-                    emotion === 'contempt' ? 'Contempt' :
-                    'Neutral';
-                  
-                  return (
-                    <div 
-                      key={emotion} 
-                      className="glass p-3 flex flex-col items-center justify-center text-center"
-                      style={{
-                        boxShadow: `0 0 15px 2px ${emotionColor}20`
-                      }}
-                    >
-                      <span className="text-2xl mb-1" aria-hidden="true">
-                        {emotion === 'joy' ? '😊' :
-                        emotion === 'sadness' ? '😢' :
-                        emotion === 'anger' ? '😠' :
-                        emotion === 'fear' ? '😨' :
-                        emotion === 'surprise' ? '😲' :
-                        emotion === 'disgust' ? '🤢' :
-                        emotion === 'contempt' ? '😏' :
-                        '😐'}
-                      </span>
-                      <span className="text-xs font-medium" style={{ color: emotionColor }}>
-                        {emotionLabel}
-                      </span>
-                      <div className="w-full mt-2 progress-bar">
-                        <div 
-                          className="progress-fill"
-                          style={{ 
-                            width: `${Math.max(5, Math.round(score * 100))}%`,
-                            backgroundColor: emotionColor,
-                            boxShadow: `0 0 8px ${emotionColor}`
-                          }}
-                        />
-                      </div>
-                      <span className="text-xs mt-1 opacity-70">
-                        {formatPercentage(score)}
-                      </span>
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        )}
-        
         {/* Clean error message */}
         {error && (
-          <div className="mt-4 p-4 glass text-white text-center">
+          <div className="mt-4 p-4 glass text-white text-center w-full">
             <span className="text-xl">⚠️</span>
             <p className="text-sm mt-2 text-red-300">{error}</p>
           </div>
